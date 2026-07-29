@@ -1,0 +1,3 @@
+<resources>
+    <string name="accessibility_service_description">Lets Phone Bridge relay taps and swipes from your PC to this phone. Only active while you\'re running the bridge yourself.</string>
+</resources>

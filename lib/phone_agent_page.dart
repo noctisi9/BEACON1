@@ -13,7 +13,7 @@ class PhoneAgentPage extends StatefulWidget {
   State<PhoneAgentPage> createState() => _PhoneAgentPageState();
 }
 
-class _PhoneAgentPageState extends State<PhoneAgentPage> {
+class _PhoneAgentPageState extends State<PhoneAgentPage> with WidgetsBindingObserver {
   static const _method = MethodChannel('phonebridge/control');
   static const _events = EventChannel('phonebridge/status');
 
@@ -27,7 +27,9 @@ class _PhoneAgentPageState extends State<PhoneAgentPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _refreshIp();
+    _refreshAccessibilityStatus();
     _sub = _events.receiveBroadcastStream().listen((event) {
       final Map map = event as Map;
       setState(() {
@@ -66,8 +68,29 @@ class _PhoneAgentPageState extends State<PhoneAgentPage> {
     await _method.invokeMethod('openAccessibilitySettings');
   }
 
+  Future<void> _refreshAccessibilityStatus() async {
+    try {
+      final enabled =
+          await _method.invokeMethod<bool>('isAccessibilityEnabled');
+      if (mounted) setState(() => accessibilityEnabled = enabled ?? false);
+    } on PlatformException {
+      // ignore, will retry on next resume
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Catches coming back from the Settings app after enabling
+    // Accessibility, which previously only updated via a service
+    // broadcast that never fired if the service wasn't running yet.
+    if (state == AppLifecycleState.resumed) {
+      _refreshAccessibilityStatus();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
     super.dispose();
   }

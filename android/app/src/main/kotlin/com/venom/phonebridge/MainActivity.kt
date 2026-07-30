@@ -31,6 +31,7 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getLocalIp" -> result.success(getLocalIpAddress())
+                    "isAccessibilityEnabled" -> result.success(isAccessibilityServiceEnabled())
                     "startService" -> {
                         requestProjectionPermission()
                         result.success(null)

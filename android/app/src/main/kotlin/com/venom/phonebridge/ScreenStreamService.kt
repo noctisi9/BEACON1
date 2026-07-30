@@ -172,7 +172,7 @@ class ScreenStreamService : Service() {
     private suspend fun readCommands(socket: Socket) {
         try {
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
-            while (isActive) {
+            while (true) {
                 val line = reader.readLine() ?: break
                 dispatchCommand(line)
             }

@@ -23,6 +23,7 @@ class _PhoneAgentPageState extends State<PhoneAgentPage> with WidgetsBindingObse
   int port = 8888;
   bool accessibilityEnabled = false;
   StreamSubscription? _sub;
+  Timer? _pollTimer;
 
   @override
   void initState() {
@@ -38,6 +39,23 @@ class _PhoneAgentPageState extends State<PhoneAgentPage> with WidgetsBindingObse
         accessibilityEnabled = map['accessibilityEnabled'] ?? accessibilityEnabled;
       });
     });
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) => _pollStatus());
+  }
+
+  Future<void> _pollStatus() async {
+    try {
+      final result = await _method.invokeMethod('getStatus');
+      final Map map = result as Map;
+      if (mounted) {
+        setState(() {
+          running = map['running'] ?? running;
+          clientConnected = map['clientConnected'] ?? clientConnected;
+          accessibilityEnabled = map['accessibilityEnabled'] ?? accessibilityEnabled;
+        });
+      }
+    } catch (_) {
+      // ignore a missed poll, next tick will retry
+    }
   }
 
   Future<void> _refreshIp() async {
@@ -99,6 +117,7 @@ class _PhoneAgentPageState extends State<PhoneAgentPage> with WidgetsBindingObse
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
+    _pollTimer?.cancel();
     super.dispose();
   }
 

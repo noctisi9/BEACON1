@@ -45,6 +45,9 @@ class ScreenStreamService : Service() {
         const val PORT = 8888
         const val NOTIF_CHANNEL = "phonebridge_channel"
         const val NOTIF_ID = 1
+
+        @Volatile var isRunning = false
+        @Volatile var isClientConnected = false
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -169,7 +172,7 @@ class ScreenStreamService : Service() {
     private suspend fun readCommands(socket: Socket) {
         try {
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
-            while (true) {
+            while (isActive) {
                 val line = reader.readLine() ?: break
                 dispatchCommand(line)
             }
@@ -202,6 +205,8 @@ class ScreenStreamService : Service() {
     }
 
     private fun broadcastStatus(running: Boolean, clientConnected: Boolean) {
+        isRunning = running
+        isClientConnected = clientConnected
         val intent = Intent("com.venom.phonebridge.STATUS").apply {
             setPackage(packageName)
             putExtra("running", running)

@@ -32,6 +32,13 @@ class MainActivity : FlutterActivity() {
                 when (call.method) {
                     "getLocalIp" -> result.success(getLocalIpAddress())
                     "isAccessibilityEnabled" -> result.success(isAccessibilityServiceEnabled())
+                    "getStatus" -> result.success(
+                        mapOf(
+                            "running" to ScreenStreamService.isRunning,
+                            "clientConnected" to ScreenStreamService.isClientConnected,
+                            "accessibilityEnabled" to isAccessibilityServiceEnabled()
+                        )
+                    )
                     "startService" -> {
                         requestProjectionPermission()
                         result.success(null)
